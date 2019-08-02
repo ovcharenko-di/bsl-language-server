@@ -33,6 +33,7 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
 import org.github._1c_syntax.bsl.languageserver.context.computer.Computer;
+import org.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import org.github._1c_syntax.bsl.languageserver.context.computer.MethodSymbolComputer;
 import org.github._1c_syntax.bsl.languageserver.context.computer.RegionSymbolComputer;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -70,6 +71,7 @@ public class DocumentContext {
   private Map<BSLParserRuleContext, MethodSymbol> nodeToMethodsMap = new HashMap<>();
   private List<RegionSymbol> regions;
   private List<RegionSymbol> regionsFlat;
+  private DiagnosticIgnoranceComputer.Data diagnosticIgnoranceData;
   private final String uri;
   private final FileType fileType;
 
@@ -202,6 +204,8 @@ public class DocumentContext {
     computeMethods();
     adjustRegions();
 
+    computeDiagnosticIgnorance();
+
     computeMetrics();
     computeCognitiveComplexity();
   }
@@ -280,6 +284,11 @@ public class DocumentContext {
     });
   }
 
+  private void computeDiagnosticIgnorance() {
+    Computer<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceComputer = new DiagnosticIgnoranceComputer(this);
+    diagnosticIgnoranceData = diagnosticIgnoranceComputer.compute();
+  }
+
   private void computeMetrics() {
     metrics = new MetricStorage();
     metrics.setFunctions(Math.toIntExact(methods.stream().filter(MethodSymbol::isFunction).count()));
@@ -309,4 +318,7 @@ public class DocumentContext {
     metrics.setStatements(statements);
   }
 
+  public DiagnosticIgnoranceComputer.Data getDiagnosticIgnorance() {
+    return diagnosticIgnoranceData;
+  }
 }

@@ -118,4 +118,5 @@ class DiagnosticProviderTest {
     assertThat(lineLengthParams.get("maxLineLength").defaultValue()).isEqualTo("120");
 
   }
+
 }
