@@ -1,6 +1,4 @@
-import groovy.util.Node
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig
-import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.CommitVersionDescription
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.VersionDescription
 import org.apache.tools.ant.filters.EscapeUnicode
 import java.util.*
@@ -9,18 +7,18 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
-    id("net.kyori.indra.license-header") version "1.2.1"
-    id("org.sonarqube") version "3.1"
+    id("net.kyori.indra.license-header") version "1.3.1"
+    id("org.sonarqube") version "3.1.1"
     id("io.franzbecker.gradle-lombok") version "4.0.0"
-    id("me.qoomon.git-versioning") version "3.0.0"
-    id("com.github.ben-manes.versions") version "0.36.0"
-    id("io.freefair.javadoc-links") version "5.3.0"
-    id("org.springframework.boot") version "2.4.2"
+    id("me.qoomon.git-versioning") version "4.2.0"
+    id("com.github.ben-manes.versions") version "0.38.0"
+    id("io.freefair.javadoc-links") version "5.3.3.3"
+    id("org.springframework.boot") version "2.4.5"
+    id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.3"
-    id("io.freefair.aspectj.post-compile-weaving") version "5.3.0"
+    id("io.freefair.aspectj.post-compile-weaving") version "5.3.3.3"
+    id("ru.vyarus.pom") version "2.1.0"
 }
-
-apply(plugin = "io.spring.dependency-management")
 
 repositories {
     mavenCentral()
@@ -39,14 +37,12 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
         pattern = "v(?<tagVersion>[0-9].*)"
         versionFormat = "\${tagVersion}\${dirty}"
     })
-    commit(closureOf<CommitVersionDescription> {
+    commit(closureOf<VersionDescription> {
         versionFormat = "\${commit.short}\${dirty}"
     })
 })
 
-val jacksonVersion = "2.11.3"
-val junitVersion = "5.6.1"
-val languageToolVersion = "5.1"
+val languageToolVersion = "5.2"
 
 dependencies {
 
@@ -57,11 +53,10 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.6.1")
 
     // lsp4j core
-//    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.10.0")
-    api("com.github.eclipse.lsp4j", "org.eclipse.lsp4j", "5cc2304f3fde9b1e82bf9e76eb6e6be4bf8fb28c")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.11.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "b088f749bad11ba6ce9c2a33bce8ade0c5f44736") {
+    api("com.github.1c-syntax", "bsl-parser", "0.18.0") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -70,7 +65,7 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
     api("com.github.1c-syntax", "utils", "0.3.1")
-    api("com.github.1c-syntax", "mdclasses", "0.7.0")
+    api("com.github.1c-syntax", "mdclasses", "0.8.0")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion)
@@ -90,31 +85,26 @@ dependencies {
     implementation("me.tongfei", "progressbar", "0.9.0")
 
     // (de)serialization
-    implementation("com.fasterxml.jackson.core", "jackson-databind", jacksonVersion)
-    implementation("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", jacksonVersion)
-    implementation("com.fasterxml.jackson.dataformat", "jackson-dataformat-xml", jacksonVersion)
-
-    // stat analysis
-    implementation("com.google.code.findbugs", "jsr305", "3.0.2")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
 
     // COMPILE
 
+    // lombok
     compileOnly("org.projectlombok", "lombok", lombok.version)
     annotationProcessor("org.projectlombok", "lombok", lombok.version)
 
+    // stat analysis
+    compileOnly("com.google.code.findbugs", "jsr305", "3.0.2")
+
     // TEST
 
-    // junit
-    testImplementation("org.junit.jupiter", "junit-jupiter-api", junitVersion)
-    testImplementation("org.junit.jupiter", "junit-jupiter-params", junitVersion)
-    testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", junitVersion)
-
     // spring
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude("com.vaadin.external.google", "android-json")
+    }
 
     // test utils
-    testImplementation("org.assertj", "assertj-core", "3.18.1")
-    testImplementation("org.mockito", "mockito-core", "3.6.28")
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
     testImplementation("org.awaitility", "awaitility", "4.0.3")
 }
@@ -219,8 +209,8 @@ sonarqube {
 }
 
 lombok {
-    version = "1.18.16"
-    sha256 = "7206cbbfd6efd5e85bceff29545633645650be58d58910a23b0d4835fbd15ed7"
+    version = "1.18.18"
+    sha256 = "601ec46206e0f9cac2c0583b3350e79f095419c395e991c761640f929038e9cc"
 }
 
 tasks {
@@ -262,26 +252,12 @@ artifacts {
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            artifact(tasks["jar"])
-            artifact(tasks["sourcesJar"])
+            from(components["java"])
             artifact(tasks["bootJar"])
-            artifact(tasks["javadocJar"])
-            pom.withXml {
-                val dependenciesNode = asNode().appendNode("dependencies")
-
-                configurations.implementation.get().dependencies.forEach(addDependency(dependenciesNode, "runtime"))
-                configurations.api.get().dependencies.forEach(addDependency(dependenciesNode, "compile"))
-            }
         }
     }
 }
 
-fun addDependency(dependenciesNode: Node, scope: String) = { dependency: Dependency ->
-    if (dependency !is SelfResolvingDependency) {
-        val dependencyNode = dependenciesNode.appendNode("dependency")
-        dependencyNode.appendNode("groupId", dependency.group)
-        dependencyNode.appendNode("artifactId", dependency.name)
-        dependencyNode.appendNode("version", dependency.version)
-        dependencyNode.appendNode("scope", scope)
-    }
+tasks.withType<GenerateModuleMetadata> {
+    enabled = false
 }
