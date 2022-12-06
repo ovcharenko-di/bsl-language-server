@@ -1,0 +1,18 @@
+{
+  "total": 24,
+  "tools inspection": {
+    "Code Inspection": 24
+  },
+  "attributes": {
+    "vcs": {
+      "sarifIdea": {
+        "repositoryUri": "https://github.com/ovcharenko-di/bsl-language-server",
+        "revisionId": "f9b834566ea332a501fdea2f32a5822a368ee5d3",
+        "branch": "develop"
+      }
+    },
+    "deviceId": "200820300000000-c7e1-9ceb-598a-f1ea3d28d7b0",
+    "jobUrl": "https://github.com/ovcharenko-di/bsl-language-server/actions/runs/3627545222",
+    "repoUrl": "https://github.com/ovcharenko-di/bsl-language-server"
+  }
+}
